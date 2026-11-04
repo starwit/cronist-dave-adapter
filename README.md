@@ -1,0 +1,1 @@
+# cronist-dave-adapter
