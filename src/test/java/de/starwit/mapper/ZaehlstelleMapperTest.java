@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-import de.starwit.dto.CreateZaehlstelleDto;
+import de.starwit.dto.dave.CreateZaehlstelleDto;
 import de.starwit.service.TestData;
 
 class ZaehlstelleMapperTest {

@@ -18,12 +18,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
-import de.starwit.dto.CreateZaehlstelleDto;
-import de.starwit.dto.CreateZaehlungDto;
-import de.starwit.dto.DetectionDto;
-import de.starwit.dto.FahrbeziehungDto;
-import de.starwit.dto.KnotenarmDto;
-import de.starwit.dto.ZaehlstelleDto;
+import de.starwit.dto.dave.CreateZaehlstelleDto;
+import de.starwit.dto.dave.CreateZaehlungDto;
+import de.starwit.dto.dave.DetectionDto;
+import de.starwit.dto.dave.FahrbeziehungDto;
+import de.starwit.dto.dave.KnotenarmDto;
+import de.starwit.dto.dave.ZaehlstelleDto;
 
 /** Field names and formats are the ones of the DTOs of dave-backend. */
 class DaveServiceTest {

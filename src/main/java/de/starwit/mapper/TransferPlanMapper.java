@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.starwit.config.AdapterProperties;
-import de.starwit.dto.CountingDto;
-import de.starwit.dto.PolygonDto;
+import de.starwit.dto.cronist.CountingDto;
+import de.starwit.dto.cronist.PolygonDto;
 import de.starwit.dto.TransferPlanDto;
 import de.starwit.repository.CrossingCountProjection;
 

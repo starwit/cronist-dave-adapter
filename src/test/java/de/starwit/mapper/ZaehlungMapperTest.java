@@ -7,9 +7,9 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import de.starwit.dto.CreateZaehlungDto;
-import de.starwit.dto.FahrbeziehungDto;
-import de.starwit.dto.KnotenarmDto;
+import de.starwit.dto.dave.CreateZaehlungDto;
+import de.starwit.dto.dave.FahrbeziehungDto;
+import de.starwit.dto.dave.KnotenarmDto;
 import de.starwit.dto.TransferPlanDto;
 import de.starwit.service.TestData;
 

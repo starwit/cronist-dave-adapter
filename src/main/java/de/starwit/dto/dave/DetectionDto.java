@@ -1,4 +1,4 @@
-package de.starwit.dto;
+package de.starwit.dto.dave;
 
 import java.time.Instant;
 import java.util.UUID;

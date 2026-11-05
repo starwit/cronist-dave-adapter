@@ -22,11 +22,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 
 import de.starwit.config.AdapterProperties.FinalStatus;
-import de.starwit.dto.CountingDto;
-import de.starwit.dto.CreateZaehlstelleDto;
-import de.starwit.dto.DetectionDto;
-import de.starwit.dto.ZaehlstelleDto;
-import de.starwit.dto.ZaehlungDto;
+import de.starwit.dto.cronist.CountingDto;
+import de.starwit.dto.dave.CreateZaehlstelleDto;
+import de.starwit.dto.dave.DetectionDto;
+import de.starwit.dto.dave.ZaehlstelleDto;
+import de.starwit.dto.dave.ZaehlungDto;
 import de.starwit.mapper.DetectionMapper;
 import de.starwit.mapper.TransferPlanMapper;
 import de.starwit.mapper.ZaehlstelleMapper;

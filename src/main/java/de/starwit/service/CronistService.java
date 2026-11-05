@@ -11,7 +11,7 @@ import org.springframework.web.client.RestClient;
 
 import de.starwit.config.AdapterProperties;
 import de.starwit.config.BearerTokenConfigurer;
-import de.starwit.dto.CountingDto;
+import de.starwit.dto.cronist.CountingDto;
 
 /** Calls the Cronist API. */
 @Service

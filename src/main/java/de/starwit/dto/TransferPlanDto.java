@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedMap;
 
+import de.starwit.dto.dave.FahrbeziehungDto;
 import de.starwit.repository.CrossingCountProjection;
 
 /**

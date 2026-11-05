@@ -1,4 +1,4 @@
-package de.starwit.dto;
+package de.starwit.dto.dave;
 
 public record BackendIdDto(String id) {
 }

@@ -16,12 +16,12 @@ import org.springframework.stereotype.Service;
 
 import de.starwit.config.AdapterProperties;
 import de.starwit.config.AdapterProperties.FinalStatus;
-import de.starwit.dto.CountingDto;
-import de.starwit.dto.DetectionDto;
-import de.starwit.dto.ObservationAreaDto;
-import de.starwit.dto.ObservatoryJobDto;
+import de.starwit.dto.cronist.CountingDto;
+import de.starwit.dto.dave.DetectionDto;
+import de.starwit.dto.cronist.ObservationAreaDto;
+import de.starwit.dto.cronist.ObservatoryJobDto;
 import de.starwit.dto.TransferPlanDto;
-import de.starwit.dto.ZaehlungDto;
+import de.starwit.dto.dave.ZaehlungDto;
 import de.starwit.mapper.DetectionMapper;
 import de.starwit.mapper.TransferPlanMapper;
 import de.starwit.mapper.ZaehlstelleMapper;

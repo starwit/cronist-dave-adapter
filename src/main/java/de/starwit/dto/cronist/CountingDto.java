@@ -1,4 +1,4 @@
-package de.starwit.dto;
+package de.starwit.dto.cronist;
 
 import java.time.Instant;
 import java.time.LocalDateTime;

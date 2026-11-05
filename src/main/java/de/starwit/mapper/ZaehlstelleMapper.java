@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import de.starwit.config.AdapterProperties;
-import de.starwit.dto.CreateZaehlstelleDto;
-import de.starwit.dto.ObservationAreaDto;
+import de.starwit.dto.dave.CreateZaehlstelleDto;
+import de.starwit.dto.cronist.ObservationAreaDto;
 
 /** Maps an observation area of Cronist to a Zaehlstelle of DAVe. */
 @Component

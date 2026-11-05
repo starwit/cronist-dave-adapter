@@ -6,10 +6,10 @@ import java.util.Map;
 
 import de.starwit.config.AdapterProperties;
 import de.starwit.config.AdapterProperties.FinalStatus;
-import de.starwit.dto.CountingDto;
-import de.starwit.dto.ObservationAreaDto;
-import de.starwit.dto.ObservatoryJobDto;
-import de.starwit.dto.PolygonDto;
+import de.starwit.dto.cronist.CountingDto;
+import de.starwit.dto.cronist.ObservationAreaDto;
+import de.starwit.dto.cronist.ObservatoryJobDto;
+import de.starwit.dto.cronist.PolygonDto;
 
 public final class TestData {
 

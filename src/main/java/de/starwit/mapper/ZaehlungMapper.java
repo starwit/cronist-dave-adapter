@@ -6,10 +6,10 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import de.starwit.config.AdapterProperties;
-import de.starwit.dto.CountingDto;
-import de.starwit.dto.CreateZaehlungDto;
-import de.starwit.dto.KnotenarmDto;
-import de.starwit.dto.ObservationAreaDto;
+import de.starwit.dto.cronist.CountingDto;
+import de.starwit.dto.dave.CreateZaehlungDto;
+import de.starwit.dto.dave.KnotenarmDto;
+import de.starwit.dto.cronist.ObservationAreaDto;
 import de.starwit.dto.TransferPlanDto;
 
 /** Maps a counting of Cronist to a Zaehlung of DAVe. */

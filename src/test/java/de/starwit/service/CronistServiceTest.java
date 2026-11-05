@@ -12,7 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
-import de.starwit.dto.CountingDto;
+import de.starwit.dto.cronist.CountingDto;
 
 class CronistServiceTest {
 

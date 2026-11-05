@@ -13,14 +13,14 @@ import org.springframework.web.client.RestClient;
 
 import de.starwit.config.AdapterProperties;
 import de.starwit.config.BearerTokenConfigurer;
-import de.starwit.dto.BackendIdDto;
-import de.starwit.dto.CreateZaehlstelleDto;
-import de.starwit.dto.CreateZaehlungDto;
-import de.starwit.dto.DetectionDto;
-import de.starwit.dto.SearchOptionsDto;
-import de.starwit.dto.SearchResultDto;
-import de.starwit.dto.UpdateStatusDto;
-import de.starwit.dto.ZaehlstelleDto;
+import de.starwit.dto.dave.BackendIdDto;
+import de.starwit.dto.dave.CreateZaehlstelleDto;
+import de.starwit.dto.dave.CreateZaehlungDto;
+import de.starwit.dto.dave.DetectionDto;
+import de.starwit.dto.dave.SearchOptionsDto;
+import de.starwit.dto.dave.SearchResultDto;
+import de.starwit.dto.dave.UpdateStatusDto;
+import de.starwit.dto.dave.ZaehlstelleDto;
 
 /** Calls the DAVe backend API. All its endpoints used here require the role FACHADMIN. */
 @Service

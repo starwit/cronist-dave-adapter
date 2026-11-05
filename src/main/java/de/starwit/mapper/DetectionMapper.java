@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.starwit.config.AdapterProperties;
-import de.starwit.dto.DetectionDto;
-import de.starwit.dto.FahrbeziehungDto;
+import de.starwit.dto.dave.DetectionDto;
+import de.starwit.dto.dave.FahrbeziehungDto;
 import de.starwit.dto.TransferPlanDto;
 import de.starwit.repository.CrossingCountProjection;
 

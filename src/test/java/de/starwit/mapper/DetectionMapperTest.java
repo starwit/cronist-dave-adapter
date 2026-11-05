@@ -9,7 +9,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 import de.starwit.config.AdapterProperties.FinalStatus;
-import de.starwit.dto.DetectionDto;
+import de.starwit.dto.dave.DetectionDto;
 import de.starwit.dto.TransferPlanDto;
 import de.starwit.repository.CrossingCountProjection;
 import de.starwit.service.TestData;

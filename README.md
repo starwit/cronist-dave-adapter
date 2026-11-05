@@ -38,7 +38,9 @@ One Maven project, its packages are horizontal layers as in [observatory-config]
 | `de.starwit.application.config` | Security configuration | `*Config` |
 | `de.starwit.service` | Transfer logic and calls of the Cronist and DAVe APIs | `*Service` |
 | `de.starwit.mapper` | Conversion from the Cronist and Observatory model to the DAVe model | `*Mapper` |
-| `de.starwit.dto` | Data objects of the APIs and the transfer | `*Dto` |
+| `de.starwit.dto.cronist` | Data objects read from Cronist | `*Dto` |
+| `de.starwit.dto.dave` | Data objects read from and sent to DAVe | `*Dto` |
+| `de.starwit.dto` | Data objects of the transfer itself, belonging to neither application | `*Dto` |
 | `de.starwit.repository` | Read access to the Observatory analytics database | `*Repository`, `*Projection` |
 | `de.starwit.config` | Adapter properties and authentication of API calls, used by all layers | |
 
