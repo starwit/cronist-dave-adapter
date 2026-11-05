@@ -28,6 +28,20 @@ The adapter has no database. DAVe's data decides what is left to do, so a transf
 
 Resuming relies on the duplicate check in `save-latest-detections` of [starwit/dave-backend](https://github.com/starwit/dave-backend). It is not in the [it-at-m](https://github.com/it-at-m/dave-backend) version, which would save the intervals twice.
 
+## Project structure
+
+One Maven project, its packages are horizontal layers as in [observatory-config](https://github.com/starwit/observatory-config).
+
+| Package | Content | Naming |
+|---|---|---|
+| `de.starwit.application` | Spring Boot main class | |
+| `de.starwit.application.config` | Security configuration | `*Config` |
+| `de.starwit.service` | Transfer logic and calls of the Cronist and DAVe APIs | `*Service` |
+| `de.starwit.mapper` | Conversion from the Cronist and Observatory model to the DAVe model | `*Mapper` |
+| `de.starwit.dto` | Data objects of the APIs and the transfer | `*Dto` |
+| `de.starwit.repository` | Read access to the Observatory analytics database | `*Repository`, `*Projection` |
+| `de.starwit.config` | Adapter properties and authentication of API calls, used by all layers | |
+
 ## Mapping
 
 ### Observation area to Zählstelle
