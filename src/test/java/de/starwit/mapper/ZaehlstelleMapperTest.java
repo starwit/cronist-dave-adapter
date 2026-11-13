@@ -18,4 +18,12 @@ class ZaehlstelleMapperTest {
         assertThat(zaehlstelle.lng()).isEqualTo(11.5);
         assertThat(zaehlstelle.stadtbezirkNummer()).isEqualTo(3);
     }
+
+    @Test
+    void kommentarAndSuchwoerterContainAreaMarkedAsCronist() {
+        CreateZaehlstelleDto zaehlstelle = new ZaehlstelleMapper(TestData.properties()).convertToDto(TestData.AREA);
+
+        assertThat(zaehlstelle.kommentar()).isEqualTo("Marienplatz - Cronist");
+        assertThat(zaehlstelle.customSuchwoerter()).containsExactly("Marienplatz", "Marienplatz - Cronist");
+    }
 }

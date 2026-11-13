@@ -18,9 +18,13 @@ public class ZaehlstelleMapper {
         this.properties = properties;
     }
 
-    /** DAVe has no name for a Zaehlstelle, its nummer is the only human readable key and unique. */
+    /**
+     * DAVe has no name for a Zaehlstelle, its nummer is the only human readable key and unique. Kommentar and
+     * Suchwoerter also carry the area name, marked as coming from Cronist.
+     */
     public CreateZaehlstelleDto convertToDto(ObservationAreaDto area) {
+        String kommentar = area.name() + " - Cronist";
         return new CreateZaehlstelleDto(area.name(), properties.dave().stadtbezirkNummer(), area.latitude(),
-                area.longitude(), "Created by cronist-dave-adapter", List.of(area.name()), false);
+                area.longitude(), kommentar, List.of(area.name()), false);
     }
 }

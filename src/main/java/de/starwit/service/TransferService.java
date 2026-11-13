@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,8 +73,19 @@ public class TransferService {
             }
         } catch (RuntimeException e) {
             // e.g. Cronist or DAVe not reachable, try again next run
-            LOG.warn("Transfer failed, retrying next run: {}", e.toString());
+            LOG.warn("Transfer failed, retrying next run: {}", describe(e));
         }
+    }
+
+    /**
+     * The whole cause chain, as the wrapping exceptions of Spring often don't tell what went wrong, and the root cause
+     * alone neither: a refused connection is a ConnectException caused by a ClosedChannelException.
+     */
+    private static String describe(RuntimeException e) {
+        return Stream.<Throwable>iterate(e, Objects::nonNull, Throwable::getCause)
+                .limit(10) // causes can be circular
+                .map(Throwable::toString)
+                .collect(Collectors.joining(", caused by "));
     }
 
     private void transfer(List<CountingDto> countings) {
@@ -88,7 +100,7 @@ public class TransferService {
                     transfer(counting, zaehlstellenIds, zaehlungen.get(ZaehlungMapper.toProjektNummer(counting)));
                 } catch (RuntimeException e) {
                     // one counting failing must not block the others
-                    LOG.warn("Transfer of counting {} failed, retrying next run: {}", counting.name(), e.toString());
+                    LOG.warn("Transfer of counting {} failed, retrying next run: {}", counting.name(), describe(e));
                 }
             }
         });

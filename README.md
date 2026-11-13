@@ -55,7 +55,8 @@ A Zählstelle in DAVe has no name. Its `nummer` is the unique key shown to users
 | `nummer` | area name, compared exactly with existing Zählstellen |
 | `lat`, `lng` | `latitude`, `longitude` |
 | `stadtbezirkNummer` | `adapter.dave.stadtbezirk-nummer`, areas have none |
-| `customSuchwoerter` | area name |
+| `kommentar` | area name + ` - Cronist` |
+| `customSuchwoerter` | area name, area name + ` - Cronist` |
 | `sichtbarDatenportal` | `false` |
 
 ### Counting to Zählung

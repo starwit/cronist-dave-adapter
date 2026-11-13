@@ -18,8 +18,11 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import de.starwit.config.AdapterProperties.FinalStatus;
 import de.starwit.dto.cronist.CountingDto;
@@ -34,6 +37,7 @@ import de.starwit.mapper.ZaehlungMapper;
 import de.starwit.repository.CrossingCountProjection;
 import de.starwit.repository.LineCrossingRepository;
 
+@ExtendWith(OutputCaptureExtension.class)
 class TransferServiceTest {
 
     private static final String ZAEHLUNG_ID = "339f992e-0925-4f6d-9e75-099bc520ad2c";
@@ -189,6 +193,39 @@ class TransferServiceTest {
         service.transferCompletedCountings();
 
         verify(dave, never()).updateStatus(anyString(), anyString());
+    }
+
+    @Test
+    void logsCauseIfCountingFails(CapturedOutput output) {
+        when(cronist.findCompletedCountings()).thenReturn(List.of(TestData.counting(1)));
+        when(lineCrossings.countCrossings(anyList())).thenThrow(new IllegalStateException("Failed to obtain connection",
+                new java.io.IOException("password authentication failed")));
+
+        service.transferCompletedCountings();
+
+        assertThat(output).contains(
+                "Failed to obtain connection, caused by java.io.IOException: password authentication failed");
+    }
+
+    @Test
+    void logsWholeCauseChainIfTransferFails(CapturedOutput output) {
+        Throwable refused = new java.net.ConnectException().initCause(new java.nio.channels.ClosedChannelException());
+        when(cronist.findCompletedCountings()).thenThrow(new IllegalStateException("I/O error: null", refused));
+
+        service.transferCompletedCountings();
+
+        assertThat(output).contains("I/O error: null, caused by java.net.ConnectException"
+                + ", caused by java.nio.channels.ClosedChannelException");
+    }
+
+    @Test
+    void logsExceptionItselfIfItHasNoCause(CapturedOutput output) {
+        when(cronist.findCompletedCountings()).thenThrow(new IllegalStateException("Cronist down"));
+
+        service.transferCompletedCountings();
+
+        assertThat(output).contains("retrying next run: java.lang.IllegalStateException: Cronist down")
+                .doesNotContain("caused by");
     }
 
     @Test
