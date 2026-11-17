@@ -90,35 +90,24 @@ public class TransferService {
                 .collect(Collectors.joining(", caused by "));
     }
 
+    /**
+     * The Zaehlungen are found by their projektNummer, whatever Zaehlstelle they are in: a Zaehlung must be found even
+     * if its area was moved or another Zaehlstelle is close by, or it would be created again. The Zaehlstellen are only
+     * read if a Zaehlung is to be created.
+     */
     private void transfer(List<CountingDto> countings) {
-        ZaehlstellenByLocation zaehlstellen = new ZaehlstellenByLocation(dave.findZaehlstellen());
-        Map<Long, List<CountingDto>> countingsByArea = countings.stream()
-                .collect(Collectors.groupingBy(counting -> counting.observationArea().id()));
-        countingsByArea.values().forEach(countingsOfArea -> {
-            ObservationAreaDto area = countingsOfArea.getFirst().observationArea();
-            Map<String, ZaehlungDto> zaehlungen = findZaehlungen(
-                    zaehlstellen.find(area.latitude(), area.longitude()).orElse(null));
-            for (CountingDto counting : countingsOfArea) {
-                try {
-                    transfer(counting, zaehlstellen, zaehlungen.get(ZaehlungMapper.toProjektNummer(counting)));
-                } catch (RuntimeException e) {
-                    // one counting failing must not block the others
-                    LOG.warn("Transfer of counting {} failed, retrying next run: {}", counting.name(), describe(e));
-                }
+        Map<String, ZaehlungDto> zaehlungen = dave
+                .findZaehlungenByProjektNummerPrefix(ZaehlungMapper.PROJEKT_NUMMER_PREFIX).stream()
+                .collect(Collectors.toMap(ZaehlungDto::projektNummer, Function.identity(), (first, second) -> first));
+        ZaehlstellenByLocation zaehlstellen = new ZaehlstellenByLocation(dave::findZaehlstellen);
+        for (CountingDto counting : countings) {
+            try {
+                transfer(counting, zaehlstellen, zaehlungen.get(ZaehlungMapper.toProjektNummer(counting)));
+            } catch (RuntimeException e) {
+                // one counting failing must not block the others
+                LOG.warn("Transfer of counting {} failed, retrying next run: {}", counting.name(), describe(e));
             }
-        });
-    }
-
-    /** @return the Zaehlungen of the Zaehlstelle by their projektNummer, empty if there is no Zaehlstelle yet */
-    private Map<String, ZaehlungDto> findZaehlungen(String zaehlstelleId) {
-        if (zaehlstelleId == null) {
-            return Map.of();
         }
-        return Objects.requireNonNullElse(dave.getZaehlstelle(zaehlstelleId).zaehlungen(), List.<ZaehlungDto>of())
-                .stream()
-                .filter(zaehlung -> zaehlung.projektNummer() != null)
-                .collect(Collectors.toMap(ZaehlungDto::projektNummer, Function.identity(),
-                        (first, second) -> first));
     }
 
     private void transfer(CountingDto counting, ZaehlstellenByLocation zaehlstellen, ZaehlungDto existing) {

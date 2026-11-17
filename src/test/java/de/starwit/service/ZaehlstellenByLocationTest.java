@@ -17,7 +17,7 @@ class ZaehlstellenByLocationTest {
     @Test
     void findsZaehlstelleWithinFiveMeters() {
         // in Wolfsburg a degree of longitude is about 68 km, so 0.00006 are about 4 m
-        var zaehlstellen = new ZaehlstellenByLocation(List.of(zaehlstelle("a", 52.42274, 10.78656)));
+        var zaehlstellen = new ZaehlstellenByLocation(() -> List.of(zaehlstelle("a", 52.42274, 10.78656)));
 
         assertThat(zaehlstellen.find(52.4227, 10.7865)).contains("a");
     }
@@ -25,7 +25,7 @@ class ZaehlstellenByLocationTest {
     @Test
     void findsNoZaehlstelleFurtherAway() {
         // 0.0001 are about 11 m to the north, and about 7 m to the east
-        var zaehlstellen = new ZaehlstellenByLocation(List.of(
+        var zaehlstellen = new ZaehlstellenByLocation(() -> List.of(
                 zaehlstelle("north", 52.4228, 10.7865), zaehlstelle("east", 52.4227, 10.7866)));
 
         assertThat(zaehlstellen.find(52.4227, 10.7865)).isEmpty();
@@ -33,7 +33,7 @@ class ZaehlstellenByLocationTest {
 
     @Test
     void ignoresZaehlstellenAndAreasWithoutLocation() {
-        var zaehlstellen = new ZaehlstellenByLocation(List.of(zaehlstelle("a", null, null)));
+        var zaehlstellen = new ZaehlstellenByLocation(() -> List.of(zaehlstelle("a", null, null)));
 
         assertThat(zaehlstellen.find(52.4227, 10.7865)).isEmpty();
         assertThat(zaehlstellen.find(null, null)).isEmpty();
@@ -41,7 +41,7 @@ class ZaehlstellenByLocationTest {
 
     @Test
     void findsAddedZaehlstelle() {
-        var zaehlstellen = new ZaehlstellenByLocation(List.of());
+        var zaehlstellen = new ZaehlstellenByLocation(() -> List.of());
         zaehlstellen.add("new", 52.4227, 10.7865);
 
         assertThat(zaehlstellen.find(52.4227, 10.7865)).contains("new");

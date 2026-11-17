@@ -30,7 +30,6 @@ import de.starwit.dto.cronist.ObservationAreaDto;
 import de.starwit.dto.dave.CreateZaehlstelleDto;
 import de.starwit.dto.dave.DetectionDto;
 import de.starwit.dto.dave.SearchResultDto;
-import de.starwit.dto.dave.ZaehlstelleDto;
 import de.starwit.dto.dave.ZaehlungDto;
 import de.starwit.mapper.DetectionMapper;
 import de.starwit.mapper.TransferPlanMapper;
@@ -77,10 +76,10 @@ class TransferServiceTest {
                 new SearchResultDto("existing-id", "123", "zaehlstelle", 48.10001, 11.49999)));
     }
 
+    /** The Zaehlung of counting 1, wherever its Zaehlstelle is. */
     private void existingZaehlung(String status) {
-        existingZaehlstelle();
-        when(dave.getZaehlstelle("existing-id")).thenReturn(new ZaehlstelleDto("existing-id",
-                List.of(new ZaehlungDto(ZAEHLUNG_ID, "cronist-1", status))));
+        when(dave.findZaehlungenByProjektNummerPrefix("cronist-")).thenReturn(
+                List.of(new ZaehlungDto(ZAEHLUNG_ID, "cronist-1", status)));
     }
 
     @Test
@@ -119,7 +118,6 @@ class TransferServiceTest {
     @Test
     void reusesZaehlstelleAtSameLocation() {
         existingZaehlstelle();
-        when(dave.getZaehlstelle("existing-id")).thenReturn(new ZaehlstelleDto("existing-id", List.of()));
         when(cronist.findCompletedCountings()).thenReturn(List.of(TestData.counting(1)));
 
         service.transferCompletedCountings();
@@ -137,8 +135,30 @@ class TransferServiceTest {
 
         service.transferCompletedCountings();
 
-        verify(dave, never()).getZaehlstelle(anyString());
         verify(dave).createZaehlung(any(), eq("area-id"));
+    }
+
+    @Test
+    void findsZaehlungAlsoIfAreaMoved() {
+        // no Zaehlstelle at the location of the area anymore, the Zaehlung is found anyway
+        existingZaehlung("CREATED");
+        when(cronist.findCompletedCountings()).thenReturn(List.of(TestData.counting(1)));
+
+        service.transferCompletedCountings();
+
+        verify(dave, never()).createZaehlstelle(any());
+        verify(dave, never()).createZaehlung(any(), anyString());
+        verify(dave).updateStatus(ZAEHLUNG_ID, "ACCOMPLISHED");
+    }
+
+    @Test
+    void readsNoZaehlstellenIfAllZaehlungenExist() {
+        existingZaehlung("ACCOMPLISHED");
+        when(cronist.findCompletedCountings()).thenReturn(List.of(TestData.counting(1)));
+
+        service.transferCompletedCountings();
+
+        verify(dave, never()).findZaehlstellen();
     }
 
     @Test

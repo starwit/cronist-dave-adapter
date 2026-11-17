@@ -24,7 +24,7 @@ import de.starwit.dto.dave.DetectionDto;
 import de.starwit.dto.dave.FahrbeziehungDto;
 import de.starwit.dto.dave.KnotenarmDto;
 import de.starwit.dto.dave.SearchResultDto;
-import de.starwit.dto.dave.ZaehlstelleDto;
+import de.starwit.dto.dave.ZaehlungDto;
 
 /** Field names and formats are the ones of the DTOs of dave-backend. */
 class DaveServiceTest {
@@ -57,18 +57,15 @@ class DaveServiceTest {
     }
 
     @Test
-    void readsZaehlungenOfZaehlstelle() {
-        server.expect(requestTo("http://dave/zaehlstelle/editZaehlstelle?id=a"))
+    void readsZaehlungenByProjektNummerPrefix() {
+        server.expect(requestTo("http://dave/zaehlung/byProjektNummerPrefix?prefix=cronist-"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess("""
-                        {"id": "a", "nummer": "Marienplatz", "zaehlungen": [
-                          {"id": "z", "projektNummer": "cronist-1", "status": "CREATED", "datum": "05.10.2026"}]}
+                        [{"id": "z", "projektNummer": "cronist-1", "status": "CREATED", "zaehlstelleId": "a"}]
                         """, MediaType.APPLICATION_JSON));
 
-        ZaehlstelleDto zaehlstelle = service.getZaehlstelle("a");
-
-        assertThat(zaehlstelle.zaehlungen().getFirst().status()).isEqualTo("CREATED");
-        assertThat(zaehlstelle.zaehlungen().getFirst().projektNummer()).isEqualTo("cronist-1");
+        assertThat(service.findZaehlungenByProjektNummerPrefix("cronist-"))
+                .containsExactly(new ZaehlungDto("z", "cronist-1", "CREATED"));
     }
 
     @Test

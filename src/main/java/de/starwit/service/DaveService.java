@@ -18,7 +18,7 @@ import de.starwit.dto.dave.DetectionDto;
 import de.starwit.dto.dave.SearchOptionsDto;
 import de.starwit.dto.dave.SearchResultDto;
 import de.starwit.dto.dave.UpdateStatusDto;
-import de.starwit.dto.dave.ZaehlstelleDto;
+import de.starwit.dto.dave.ZaehlungDto;
 
 /** Calls the DAVe backend API. All its endpoints used here require the role FACHADMIN. */
 @Service
@@ -57,10 +57,15 @@ public class DaveService {
                 .toList();
     }
 
-    /** @return the Zaehlstelle with all its Zaehlungen, whatever their status */
-    public ZaehlstelleDto getZaehlstelle(String id) {
-        return restClient.get().uri("/zaehlstelle/editZaehlstelle?id={id}", id).retrieve()
-                .body(ZaehlstelleDto.class);
+    /**
+     * Requires the endpoint of branch {@code feature/ab#2325-get-values-from-video-upload} of dave-backend.
+     *
+     * @return all Zaehlungen whose projektNummer starts with the prefix, whatever their status and Zaehlstelle
+     */
+    public List<ZaehlungDto> findZaehlungenByProjektNummerPrefix(String prefix) {
+        return restClient.get().uri("/zaehlung/byProjektNummerPrefix?prefix={prefix}", prefix).retrieve()
+                .body(new ParameterizedTypeReference<>() {
+                });
     }
 
     /** @return id of the created Zaehlstelle, or of the existing one at its location, which DAVe then overwrites */

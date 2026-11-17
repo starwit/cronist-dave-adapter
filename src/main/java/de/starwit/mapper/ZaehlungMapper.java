@@ -16,6 +16,9 @@ import de.starwit.dto.TransferPlanDto;
 @Component
 public class ZaehlungMapper {
 
+    /** Start of the projektNummer of all Zaehlungen the adapter creates, so it can find them again in DAVe. */
+    public static final String PROJEKT_NUMMER_PREFIX = "cronist-";
+
     private static final int INTERVALS_PER_DAY = 96;
 
     private final AdapterProperties properties;
@@ -37,7 +40,7 @@ public class ZaehlungMapper {
 
     /** Identifies the Zaehlung of a counting in DAVe. */
     public static String toProjektNummer(CountingDto counting) {
-        return "cronist-" + counting.id();
+        return PROJEKT_NUMMER_PREFIX + counting.id();
     }
 
     /**

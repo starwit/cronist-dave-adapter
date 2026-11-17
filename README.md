@@ -12,8 +12,8 @@ Observatory analytics DB ── line crossings ───┘
 
 Every `adapter.transfer-interval`, for each counting in state `COMPLETED`:
 
-1. Finds the Zählstelle at the location of its observation area, or creates it.
-2. Finds or creates the Zählung of the counting.
+1. Finds the Zählung of the counting by its `projektNummer` `cronist-<counting id>`, in whatever Zählstelle it is.
+2. If there is none, finds the Zählstelle at the location of the observation area or creates it, and creates the Zählung there.
 3. Sends the line crossings to the detector API, one quarter hour at a time, oldest first.
 4. Sets the Zählung to `ACCOMPLISHED`, DAVe then calculates its sums and peak hours. With `adapter.dave.final-status=ACTIVE`, the default, it is then set to `ACTIVE` and so released. With `ACCOMPLISHED` a Fachadmin releases it in DAVe.
 
@@ -27,6 +27,8 @@ The adapter has no database. DAVe's data decides what is left to do, so a transf
 | any other status | nothing |
 
 Resuming relies on the duplicate check in `save-latest-detections` of [starwit/dave-backend](https://github.com/starwit/dave-backend). It is not in the [it-at-m](https://github.com/it-at-m/dave-backend) version, which would save the intervals twice.
+
+The Zählungen are read once per run with `GET /zaehlung/byProjektNummerPrefix?prefix=cronist-`, from branch `feature/ab#2325-get-values-from-video-upload` of dave-backend. As they are found independent of their Zählstelle, a moved area or a second Zählstelle close by doesn't create a Zählung twice.
 
 ## Project structure
 
@@ -49,7 +51,7 @@ One Maven project, its packages are horizontal layers as in [observatory-config]
 
 ### Observation area to Zählstelle
 
-A Zählstelle is identified by its location, not by its `nummer`: the `nummer` follows a numbering scheme of DAVe (Stadtbezirk, Stadtbezirksviertel, running number) the adapter can't fill, so it sends none. An area belongs to the Zählstelle within 5 m of its `latitude`, `longitude`. The adapter reads the locations of all Zählstellen from the search of DAVe and only creates a Zählstelle if there is none at the location of the area. An existing Zählstelle is never changed, whoever created it.
+A Zählstelle is identified by its location, not by its `nummer`: the `nummer` follows a numbering scheme of DAVe (Stadtbezirk, Stadtbezirksviertel, running number) the adapter can't fill, so it sends none. An area belongs to the Zählstelle within 5 m of its `latitude`, `longitude`. Only when a Zählung is to be created, the adapter reads the locations of all Zählstellen from the search of DAVe, and only creates a Zählstelle if there is none at the location of the area. An existing Zählstelle is never changed, whoever created it.
 
 The comparison is the one DAVe does when saving a new Zählstelle (branch `feature/ab#2325-get-values-from-video-upload` of dave-backend): DAVe updates an existing Zählstelle within 5 m instead of creating one. The adapter does it beforehand, as DAVe overwrites all fields of the existing Zählstelle with the ones sent.
 
