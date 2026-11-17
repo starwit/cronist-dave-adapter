@@ -12,10 +12,10 @@ Observatory analytics DB ── line crossings ───┘
 
 Every `adapter.transfer-interval`, for each counting in state `COMPLETED`:
 
-1. Finds or creates the Zählstelle of its observation area.
+1. Finds the Zählstelle at the location of its observation area, or creates it.
 2. Finds or creates the Zählung of the counting.
 3. Sends the line crossings to the detector API, one quarter hour at a time, oldest first.
-4. Sets the Zählung to `ACCOMPLISHED`, DAVe then calculates its sums and peak hours. With `adapter.dave.final-status=ACTIVE` it is also released.
+4. Sets the Zählung to `ACCOMPLISHED`, DAVe then calculates its sums and peak hours. With `adapter.dave.final-status=ACTIVE`, the default, it is then set to `ACTIVE` and so released. With `ACCOMPLISHED` a Fachadmin releases it in DAVe.
 
 The adapter has no database. DAVe's data decides what is left to do, so a transfer that fails at any point is resumed by the next run:
 
@@ -36,10 +36,11 @@ One Maven project, its packages are horizontal layers as in [observatory-config]
 |---|---|---|
 | `de.starwit.application` | Spring Boot main class | |
 | `de.starwit.application.config` | Security configuration | `*Config` |
-| `de.starwit.service` | Transfer logic and calls of the Cronist and DAVe APIs | `*Service` |
+| `de.starwit.service` | Transfer logic and calls of the Cronist, DAVe and GeoServer APIs | `*Service` |
 | `de.starwit.mapper` | Conversion from the Cronist and Observatory model to the DAVe model | `*Mapper` |
 | `de.starwit.dto.cronist` | Data objects read from Cronist | `*Dto` |
 | `de.starwit.dto.dave` | Data objects read from and sent to DAVe | `*Dto` |
+| `de.starwit.dto.geoserver` | Data objects read from the GeoServer | `*Dto` |
 | `de.starwit.dto` | Data objects of the transfer itself, belonging to neither application | `*Dto` |
 | `de.starwit.repository` | Read access to the Observatory analytics database | `*Repository`, `*Projection` |
 | `de.starwit.config` | Adapter properties and authentication of API calls, used by all layers | |
@@ -48,16 +49,27 @@ One Maven project, its packages are horizontal layers as in [observatory-config]
 
 ### Observation area to Zählstelle
 
-A Zählstelle in DAVe has no name. Its `nummer` is the unique key shown to users, so it is used as the name.
+A Zählstelle is identified by its location, not by its `nummer`: the `nummer` follows a numbering scheme of DAVe (Stadtbezirk, Stadtbezirksviertel, running number) the adapter can't fill, so it sends none. An area belongs to the Zählstelle within 5 m of its `latitude`, `longitude`. The adapter reads the locations of all Zählstellen from the search of DAVe and only creates a Zählstelle if there is none at the location of the area. An existing Zählstelle is never changed, whoever created it.
+
+The comparison is the one DAVe does when saving a new Zählstelle (branch `feature/ab#2325-get-values-from-video-upload` of dave-backend): DAVe updates an existing Zählstelle within 5 m instead of creating one. The adapter does it beforehand, as DAVe overwrites all fields of the existing Zählstelle with the ones sent.
 
 | DAVe | Cronist |
 |---|---|
-| `nummer` | area name, compared exactly with existing Zählstellen |
-| `lat`, `lng` | `latitude`, `longitude` |
-| `stadtbezirkNummer` | `adapter.dave.stadtbezirk-nummer`, areas have none |
+| `nummer` | none |
+| `lat`, `lng` | `latitude`, `longitude`, an area without them is not transferred |
+| `stadtbezirkNummer` | Stadtteil of `latitude`, `longitude` mapped by `adapter.dave.stadtbezirk-mapping`, see below |
 | `kommentar` | area name + ` - Cronist` |
-| `customSuchwoerter` | area name, area name + ` - Cronist` |
+| `customSuchwoerter` | area name |
 | `sichtbarDatenportal` | `false` |
+
+Areas in Cronist have no Stadtbezirk. The adapter asks the WFS `adapter.geoserver.url` for the Stadtteil containing the area, by default the [Stadt- und Ortsteile of Wolfsburg](https://gdiservices.stadt.wolfsburg.de/geoserver/opendata_stadtteile/wfs) (layer `opendata_stadtteile:stadtteile`, attribute `name`). The layer has no official numbers, so `adapter.dave.stadtbezirk-mapping` maps the name of the Stadtteil to the number of the Stadtbezirk in DAVe:
+
+```properties
+adapter.dave.stadtbezirk-mapping[Stadtmitte]=130
+adapter.dave.stadtbezirk-mapping[Alt-Wolfsburg]=101
+```
+
+The numbers are the ones of the Stadtbezirke in DAVe, table `city_district`. `adapter.dave.stadtbezirk-nummer`, by default `130` (Stadtmitte of Wolfsburg), is used if the area is in no Stadtteil, its Stadtteil is not mapped (a warning is logged) or `adapter.geoserver.url` is empty. If the GeoServer is not reachable, no Zählstelle is created and the transfer is retried next run, so a Zählstelle doesn't end up in a wrong Stadtbezirk. The Stadtbezirk of an existing Zählstelle is not changed.
 
 ### Counting to Zählung
 
@@ -111,11 +123,12 @@ See [application.properties](src/main/resources/application.properties). The mai
 |---|---|---|
 | `adapter.cronist.url` | `CRONIST_URL` | `http://localhost:8081/cronist` |
 | `adapter.dave.url` | `DAVE_URL` | `http://localhost:8080` |
+| `adapter.geoserver.url` | `GEOSERVER_URL` | WFS of the Stadtteile of Wolfsburg, empty to disable |
 | `spring.datasource.url` | `DB_URL` | `jdbc:postgresql://localhost:5432/analytics` |
 | `spring.datasource.username` | `DB_USERNAME` | `analytics` |
 | `spring.datasource.password` | `DB_PASSWORD` | `analytics` |
 | `adapter.zone` | | `Europe/Berlin`, has to be the time zone DAVe runs in |
-| `adapter.dave.final-status` | | `ACCOMPLISHED`, a Fachadmin releases the Zählung in DAVe |
+| `adapter.dave.final-status` | | `ACTIVE`, the Zählung is released right away. With `ACCOMPLISHED` a Fachadmin releases it in DAVe |
 
 ### Authentication
 

@@ -23,6 +23,7 @@ import de.starwit.dto.dave.CreateZaehlungDto;
 import de.starwit.dto.dave.DetectionDto;
 import de.starwit.dto.dave.FahrbeziehungDto;
 import de.starwit.dto.dave.KnotenarmDto;
+import de.starwit.dto.dave.SearchResultDto;
 import de.starwit.dto.dave.ZaehlstelleDto;
 
 /** Field names and formats are the ones of the DTOs of dave-backend. */
@@ -51,8 +52,8 @@ class DaveServiceTest {
                          {"id": "b", "fachId": "Marienplatz", "type": "messstelle"}]
                         """, MediaType.APPLICATION_JSON));
 
-        assertThat(service.findZaehlstellenIdsByNummer()).containsOnlyKeys("Marienplatz")
-                .containsEntry("Marienplatz", "a");
+        assertThat(service.findZaehlstellen()).singleElement()
+                .isEqualTo(new SearchResultDto("a", "Marienplatz", "zaehlstelle", 1.0, null));
     }
 
     @Test
@@ -75,12 +76,12 @@ class DaveServiceTest {
         server.expect(requestTo("http://dave/zaehlstelle/save"))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(content().json("""
-                        {"nummer": "Marienplatz", "stadtbezirkNummer": 3, "lat": 48.1, "lng": 11.5, "kommentar": "c",
+                        {"stadtbezirkNummer": 3, "lat": 48.1, "lng": 11.5, "kommentar": "c",
                          "customSuchwoerter": ["Marienplatz"], "sichtbarDatenportal": false}
                         """, org.springframework.test.json.JsonCompareMode.STRICT))
                 .andRespond(withSuccess("{\"id\": \"a\"}", MediaType.APPLICATION_JSON));
 
-        assertThat(service.createZaehlstelle(new CreateZaehlstelleDto("Marienplatz", 3, 48.1, 11.5, "c",
+        assertThat(service.createZaehlstelle(new CreateZaehlstelleDto(3, 48.1, 11.5, "c",
                 List.of("Marienplatz"), false))).isEqualTo("a");
     }
 

@@ -1,6 +1,5 @@
 package de.starwit.service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,6 +43,7 @@ public class TransferService {
 
     private final CronistService cronist;
     private final DaveService dave;
+    private final StadtteilService stadtteile;
     private final LineCrossingRepository lineCrossings;
     private final TransferPlanMapper transferPlanMapper;
     private final ZaehlstelleMapper zaehlstelleMapper;
@@ -51,11 +51,13 @@ public class TransferService {
     private final DetectionMapper detectionMapper;
     private final AdapterProperties properties;
 
-    public TransferService(CronistService cronist, DaveService dave, LineCrossingRepository lineCrossings,
-            TransferPlanMapper transferPlanMapper, ZaehlstelleMapper zaehlstelleMapper, ZaehlungMapper zaehlungMapper,
-            DetectionMapper detectionMapper, AdapterProperties properties) {
+    public TransferService(CronistService cronist, DaveService dave, StadtteilService stadtteile,
+            LineCrossingRepository lineCrossings, TransferPlanMapper transferPlanMapper,
+            ZaehlstelleMapper zaehlstelleMapper, ZaehlungMapper zaehlungMapper, DetectionMapper detectionMapper,
+            AdapterProperties properties) {
         this.cronist = cronist;
         this.dave = dave;
+        this.stadtteile = stadtteile;
         this.lineCrossings = lineCrossings;
         this.transferPlanMapper = transferPlanMapper;
         this.zaehlstelleMapper = zaehlstelleMapper;
@@ -89,15 +91,16 @@ public class TransferService {
     }
 
     private void transfer(List<CountingDto> countings) {
-        Map<String, String> zaehlstellenIds = new HashMap<>(dave.findZaehlstellenIdsByNummer());
+        ZaehlstellenByLocation zaehlstellen = new ZaehlstellenByLocation(dave.findZaehlstellen());
         Map<Long, List<CountingDto>> countingsByArea = countings.stream()
                 .collect(Collectors.groupingBy(counting -> counting.observationArea().id()));
         countingsByArea.values().forEach(countingsOfArea -> {
+            ObservationAreaDto area = countingsOfArea.getFirst().observationArea();
             Map<String, ZaehlungDto> zaehlungen = findZaehlungen(
-                    zaehlstellenIds.get(countingsOfArea.getFirst().observationArea().name()));
+                    zaehlstellen.find(area.latitude(), area.longitude()).orElse(null));
             for (CountingDto counting : countingsOfArea) {
                 try {
-                    transfer(counting, zaehlstellenIds, zaehlungen.get(ZaehlungMapper.toProjektNummer(counting)));
+                    transfer(counting, zaehlstellen, zaehlungen.get(ZaehlungMapper.toProjektNummer(counting)));
                 } catch (RuntimeException e) {
                     // one counting failing must not block the others
                     LOG.warn("Transfer of counting {} failed, retrying next run: {}", counting.name(), describe(e));
@@ -118,11 +121,11 @@ public class TransferService {
                         (first, second) -> first));
     }
 
-    private void transfer(CountingDto counting, Map<String, String> zaehlstellenIds, ZaehlungDto existing) {
+    private void transfer(CountingDto counting, ZaehlstellenByLocation zaehlstellen, ZaehlungDto existing) {
         String zaehlungId = existing == null ? null : existing.id();
         String status = existing == null ? STATUS_CREATED : existing.status();
         if (STATUS_CREATED.equals(status)) {
-            Optional<String> transferred = transferData(counting, zaehlstellenIds, zaehlungId);
+            Optional<String> transferred = transferData(counting, zaehlstellen, zaehlungId);
             if (transferred.isEmpty()) {
                 return;
             }
@@ -139,7 +142,7 @@ public class TransferService {
      * @param zaehlungId the Zaehlung of an earlier, unfinished attempt, null to create it
      * @return id of the then ACCOMPLISHED Zaehlung, empty if the counting has no data to transfer
      */
-    private Optional<String> transferData(CountingDto counting, Map<String, String> zaehlstellenIds,
+    private Optional<String> transferData(CountingDto counting, ZaehlstellenByLocation zaehlstellen,
             String zaehlungId) {
         List<String> jobNames = Objects.requireNonNullElse(counting.observatoryJobs(), List.<ObservatoryJobDto>of())
                 .stream().map(ObservatoryJobDto::name).toList();
@@ -156,7 +159,7 @@ public class TransferService {
         String id = zaehlungId != null
                 ? zaehlungId
                 : dave.createZaehlung(zaehlungMapper.convertToDto(counting, plan),
-                        findOrCreateZaehlstelle(counting, zaehlstellenIds));
+                        findOrCreateZaehlstelle(counting, zaehlstellen));
         List<List<DetectionDto>> detections = detectionMapper.convertToDtos(UUID.fromString(id), plan);
         detections.forEach(dave::saveDetections);
         // DAVe calculates the sums and peak hours of the Zaehlung on this status change
@@ -165,12 +168,25 @@ public class TransferService {
         return Optional.of(id);
     }
 
-    private String findOrCreateZaehlstelle(CountingDto counting, Map<String, String> zaehlstellenIds) {
+    /**
+     * Only saves a Zaehlstelle if there is none at the location of the area: DAVe would overwrite an existing one with
+     * the data of the area, including what a user changed.
+     */
+    private String findOrCreateZaehlstelle(CountingDto counting, ZaehlstellenByLocation zaehlstellen) {
         ObservationAreaDto area = counting.observationArea();
-        return zaehlstellenIds.computeIfAbsent(area.name(), name -> {
-            String id = dave.createZaehlstelle(zaehlstelleMapper.convertToDto(area));
-            LOG.info("Created Zaehlstelle {} for observation area {}", id, name);
-            return id;
-        });
+        if (area.latitude() == null || area.longitude() == null) {
+            throw new IllegalStateException("Observation area " + area.name() + " has no location");
+        }
+        Optional<String> existing = zaehlstellen.find(area.latitude(), area.longitude());
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        // fails if the GeoServer is not reachable: a Zaehlstelle in the wrong Stadtbezirk would stay there
+        Optional<String> stadtteil = stadtteile.findStadtteil(area.latitude(), area.longitude());
+        String id = dave.createZaehlstelle(zaehlstelleMapper.convertToDto(area, stadtteil));
+        zaehlstellen.add(id, area.latitude(), area.longitude());
+        LOG.info("Created Zaehlstelle {} for observation area {} in Stadtteil {}", id, area.name(),
+                stadtteil.orElse("unknown"));
+        return id;
     }
 }

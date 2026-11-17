@@ -51,8 +51,9 @@ class ApplicationTest {
     void bindsDefaultConfiguration() {
         assertThat(properties.intersectionMapping()).hasSize(8).containsEntry("NE", 5).containsEntry("NW", 8);
         assertThat(properties.zone().getId()).isEqualTo("Europe/Berlin");
-        assertThat(properties.dave().finalStatus()).isEqualTo(FinalStatus.ACCOMPLISHED);
+        assertThat(properties.dave().finalStatus()).isEqualTo(FinalStatus.ACTIVE);
         assertThat(properties.dave().kategorien()).containsExactly("PKW");
+        assertThat(properties.dave().stadtbezirkNummer()).isEqualTo(130);
     }
 
     @Test

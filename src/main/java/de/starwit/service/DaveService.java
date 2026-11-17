@@ -1,8 +1,6 @@
 package de.starwit.service;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
@@ -44,12 +42,11 @@ public class DaveService {
     }
 
     /**
-     * An empty query finds all. DAVe has no lookup by nummer and its search is word based, so the exact comparison is
-     * left to the caller.
+     * An empty query finds all. DAVe has no lookup by location, so the comparison is left to the caller.
      *
-     * @return the ids of all Zaehlstellen by their nummer
+     * @return all Zaehlstellen with their location
      */
-    public Map<String, String> findZaehlstellenIdsByNummer() {
+    public List<SearchResultDto> findZaehlstellen() {
         List<SearchResultDto> results = restClient.post().uri("/search?query=")
                 .body(new SearchOptionsDto(false, true, List.of()))
                 .retrieve()
@@ -57,7 +54,7 @@ public class DaveService {
                 });
         return results.stream()
                 .filter(result -> TYPE_ZAEHLSTELLE.equals(result.type()))
-                .collect(Collectors.toMap(SearchResultDto::fachId, SearchResultDto::id, (first, second) -> first));
+                .toList();
     }
 
     /** @return the Zaehlstelle with all its Zaehlungen, whatever their status */
@@ -66,7 +63,7 @@ public class DaveService {
                 .body(ZaehlstelleDto.class);
     }
 
-    /** @return id of the created Zaehlstelle, fails if one with this nummer exists */
+    /** @return id of the created Zaehlstelle, or of the existing one at its location, which DAVe then overwrites */
     public String createZaehlstelle(CreateZaehlstelleDto zaehlstelle) {
         return restClient.post().uri("/zaehlstelle/save").body(zaehlstelle).retrieve().body(BackendIdDto.class).id();
     }

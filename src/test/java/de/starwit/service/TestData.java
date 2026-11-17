@@ -22,7 +22,9 @@ public final class TestData {
         return new AdapterProperties(ZoneId.of("Europe/Berlin"), correctBicycle,
                 Map.of("N", 1, "E", 2, "S", 3, "W", 4),
                 new AdapterProperties.Cronist("http://cronist", null, null, null),
-                new AdapterProperties.Dave("http://dave", null, null, null, 3, List.of("PKW"), finalStatus));
+                new AdapterProperties.Dave("http://dave", null, null, null, 3, Map.of("Stadtmitte", 5),
+                        List.of("PKW"), finalStatus),
+                new AdapterProperties.Geoserver("http://geoserver/wfs", "ws:stadtteile", null, null));
     }
 
     public static AdapterProperties properties() {

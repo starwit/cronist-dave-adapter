@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,8 +26,10 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import de.starwit.config.AdapterProperties.FinalStatus;
 import de.starwit.dto.cronist.CountingDto;
+import de.starwit.dto.cronist.ObservationAreaDto;
 import de.starwit.dto.dave.CreateZaehlstelleDto;
 import de.starwit.dto.dave.DetectionDto;
+import de.starwit.dto.dave.SearchResultDto;
 import de.starwit.dto.dave.ZaehlstelleDto;
 import de.starwit.dto.dave.ZaehlungDto;
 import de.starwit.mapper.DetectionMapper;
@@ -45,6 +47,7 @@ class TransferServiceTest {
     private CronistService cronist;
     private DaveService dave;
     private LineCrossingRepository lineCrossings;
+    private StadtteilService stadtteile;
     private TransferService service;
 
     @BeforeEach
@@ -52,6 +55,8 @@ class TransferServiceTest {
         cronist = mock(CronistService.class);
         dave = mock(DaveService.class);
         lineCrossings = mock(LineCrossingRepository.class);
+        stadtteile = mock(StadtteilService.class);
+        when(stadtteile.findStadtteil(48.1, 11.5)).thenReturn(Optional.of("Stadtmitte"));
         service = service(FinalStatus.ACCOMPLISHED);
         when(dave.createZaehlstelle(any())).thenReturn("area-id");
         when(dave.createZaehlung(any(), anyString())).thenReturn(ZAEHLUNG_ID);
@@ -61,13 +66,19 @@ class TransferServiceTest {
 
     private TransferService service(FinalStatus finalStatus) {
         var properties = TestData.properties(finalStatus, true);
-        return new TransferService(cronist, dave, lineCrossings, new TransferPlanMapper(properties),
+        return new TransferService(cronist, dave, stadtteile, lineCrossings, new TransferPlanMapper(properties),
                 new ZaehlstelleMapper(properties), new ZaehlungMapper(properties), new DetectionMapper(properties),
                 properties);
     }
 
+    /** A Zaehlstelle at the location of {@link TestData#AREA}, a bit off as DAVe stores it rounded. */
+    private void existingZaehlstelle() {
+        when(dave.findZaehlstellen()).thenReturn(List.of(
+                new SearchResultDto("existing-id", "123", "zaehlstelle", 48.10001, 11.49999)));
+    }
+
     private void existingZaehlung(String status) {
-        when(dave.findZaehlstellenIdsByNummer()).thenReturn(Map.of("Marienplatz", "existing-id"));
+        existingZaehlstelle();
         when(dave.getZaehlstelle("existing-id")).thenReturn(new ZaehlstelleDto("existing-id",
                 List.of(new ZaehlungDto(ZAEHLUNG_ID, "cronist-1", status))));
     }
@@ -80,7 +91,8 @@ class TransferServiceTest {
 
         ArgumentCaptor<CreateZaehlstelleDto> zaehlstelle = ArgumentCaptor.captor();
         verify(dave).createZaehlstelle(zaehlstelle.capture());
-        assertThat(zaehlstelle.getValue().nummer()).isEqualTo("Marienplatz");
+        assertThat(zaehlstelle.getValue().kommentar()).isEqualTo("Marienplatz - Cronist");
+        assertThat(zaehlstelle.getValue().stadtbezirkNummer()).isEqualTo(5);
         verify(lineCrossings).countCrossings(List.of("job-n", "job-e"));
 
         ArgumentCaptor<List<DetectionDto>> batches = ArgumentCaptor.captor();
@@ -94,8 +106,19 @@ class TransferServiceTest {
     }
 
     @Test
-    void reusesZaehlstelleWithSameName() {
-        when(dave.findZaehlstellenIdsByNummer()).thenReturn(Map.of("Marienplatz", "existing-id"));
+    void createsNoZaehlstelleIfStadtteilCannotBeLookedUp() {
+        when(stadtteile.findStadtteil(48.1, 11.5)).thenThrow(new IllegalStateException("GeoServer down"));
+        when(cronist.findCompletedCountings()).thenReturn(List.of(TestData.counting(1)));
+
+        service.transferCompletedCountings();
+
+        verify(dave, never()).createZaehlstelle(any());
+        verify(dave, never()).createZaehlung(any(), anyString());
+    }
+
+    @Test
+    void reusesZaehlstelleAtSameLocation() {
+        existingZaehlstelle();
         when(dave.getZaehlstelle("existing-id")).thenReturn(new ZaehlstelleDto("existing-id", List.of()));
         when(cronist.findCompletedCountings()).thenReturn(List.of(TestData.counting(1)));
 
@@ -103,6 +126,33 @@ class TransferServiceTest {
 
         verify(dave, never()).createZaehlstelle(any());
         verify(dave).createZaehlung(any(), eq("existing-id"));
+    }
+
+    @Test
+    void createsZaehlstelleIfExistingOneIsFurtherAway() {
+        // about 11 m to the north
+        when(dave.findZaehlstellen()).thenReturn(List.of(
+                new SearchResultDto("other-id", "123", "zaehlstelle", 48.1001, 11.5)));
+        when(cronist.findCompletedCountings()).thenReturn(List.of(TestData.counting(1)));
+
+        service.transferCompletedCountings();
+
+        verify(dave, never()).getZaehlstelle(anyString());
+        verify(dave).createZaehlung(any(), eq("area-id"));
+    }
+
+    @Test
+    void createsNoZaehlstelleForAreaWithoutLocation() {
+        ObservationAreaDto area = new ObservationAreaDto(8L, "Nowhere", null, null);
+        CountingDto counting = TestData.counting(1);
+        when(cronist.findCompletedCountings()).thenReturn(List.of(new CountingDto(counting.id(), counting.name(),
+                counting.startDateTime(), counting.endDateTime(), counting.state(), area,
+                counting.observatoryJobs(), counting.polygon())));
+
+        service.transferCompletedCountings();
+
+        verify(dave, never()).createZaehlstelle(any());
+        verify(dave, never()).createZaehlung(any(), anyString());
     }
 
     @Test
@@ -246,6 +296,6 @@ class TransferServiceTest {
 
         service.transferCompletedCountings();
 
-        verify(dave, never()).findZaehlstellenIdsByNummer();
+        verify(dave, never()).findZaehlstellen();
     }
 }
