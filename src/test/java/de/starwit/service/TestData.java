@@ -13,7 +13,7 @@ import de.starwit.dto.cronist.PolygonDto;
 
 public final class TestData {
 
-    public static final ObservationAreaDto AREA = new ObservationAreaDto(7L, "Marienplatz", 48.1, 11.5);
+    public static final ObservationAreaDto AREA = new ObservationAreaDto(7L, "Marienplatz", 48.1, 11.5, null);
 
     private TestData() {
     }

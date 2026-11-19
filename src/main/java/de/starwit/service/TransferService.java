@@ -176,6 +176,23 @@ public class TransferService {
         zaehlstellen.add(id, area.latitude(), area.longitude());
         LOG.info("Created Zaehlstelle {} for observation area {} in Stadtteil {}", id, area.name(),
                 stadtteil.orElse("unknown"));
+        transferImage(area, id);
         return id;
+    }
+
+    /**
+     * The image is only sent with a new Zaehlstelle, like its other data. Its failure doesn't fail the transfer: the
+     * Zaehlstelle exists now and won't be created again, the Zaehlung is more important than its image.
+     */
+    private void transferImage(ObservationAreaDto area, String zaehlstelleId) {
+        if (area.imageId() == null) {
+            return;
+        }
+        try {
+            dave.saveZaehlstelleImage(zaehlstelleId, cronist.getImage(area.imageId()));
+        } catch (RuntimeException e) {
+            LOG.warn("Image of observation area {} not transferred to Zaehlstelle {}: {}", area.name(), zaehlstelleId,
+                    describe(e));
+        }
     }
 }

@@ -1,16 +1,25 @@
 package de.starwit.service;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
 import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
 import de.starwit.config.AdapterProperties;
 import de.starwit.config.BearerTokenConfigurer;
+import de.starwit.dto.cronist.ImageDto;
 import de.starwit.dto.dave.BackendIdDto;
 import de.starwit.dto.dave.CreateZaehlstelleDto;
 import de.starwit.dto.dave.CreateZaehlungDto;
@@ -71,6 +80,23 @@ public class DaveService {
     /** @return id of the created Zaehlstelle, or of the existing one at its location, which DAVe then overwrites */
     public String createZaehlstelle(CreateZaehlstelleDto zaehlstelle) {
         return restClient.post().uri("/zaehlstelle/save").body(zaehlstelle).retrieve().body(BackendIdDto.class).id();
+    }
+
+    /** Replaces the image of the Zaehlstelle, if it has one. */
+    public void saveZaehlstelleImage(String zaehlstelleId, ImageDto image) {
+        // DAVe names the image after the Zaehlstelle, but a part needs a filename to be taken as a file
+        Resource file = new ByteArrayResource(image.data()) {
+            @Override
+            public String getFilename() {
+                return "zaehlstelle";
+            }
+        };
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(Objects.requireNonNullElse(image.contentType(), MediaType.APPLICATION_OCTET_STREAM));
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("image", new HttpEntity<>(file, headers));
+        restClient.post().uri("/zaehlstelleimage/{id}", zaehlstelleId).contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(body).retrieve().toBodilessEntity();
     }
 
     /** @return id of the created Zaehlung */

@@ -79,7 +79,7 @@ code { font-family: var(--mono); font-size: 14px; }
     <h2>Wie die Daten fließen</h2>
     <figure>
       <div class="scroll">
-        <svg viewBox="0 0 1250 450" role="img" aria-label="Datenfluss: Der Adapter liest Zählungen aus der Cronist-REST-API und Linecrossings aus der Observatory-Datenbank, gleicht den Bestand in DAVe ab und schreibt dann Zählstelle, Zählung, Detections und Status über die DAVe-REST-API.">
+        <svg viewBox="0 0 1250 540" role="img" aria-label="Datenfluss: Der Adapter liest Zählungen aus der Cronist-REST-API, findet ihre Zählungen in DAVe über die Projektnummer und liest Linecrossings aus der Observatory-Datenbank. Nur für eine neue Zählung sucht er die Zählstelle am Standort, fragt beim GeoServer den Stadtteil ab und legt die Zählstelle bei Bedarf an. Dann schreibt er Zählung, Detections und Status über die DAVe-REST-API.">
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path class="head" d="M0 0 L10 5 L0 10 z"/>
@@ -87,7 +87,7 @@ code { font-family: var(--mono); font-size: 14px; }
           </defs>
 
           <!-- Adapter frame -->
-          <rect class="frame" x="290" y="60" width="544" height="380" rx="6"/>
+          <rect class="frame" x="290" y="60" width="544" height="465" rx="6"/>
           <text class="strong" x="306" y="82">cronist-dave-adapter, alle 5 Minuten</text>
 
           <!-- Sources -->
@@ -97,6 +97,9 @@ code { font-family: var(--mono); font-size: 14px; }
           <rect class="box" x="20" y="340" width="160" height="50" rx="4"/>
           <text class="strong" x="100" y="361" text-anchor="middle">Observatory</text>
           <text class="small" x="100" y="379" text-anchor="middle">Analytics-Datenbank</text>
+          <rect class="box" x="20" y="455" width="160" height="50" rx="4"/>
+          <text class="strong" x="100" y="476" text-anchor="middle">GeoServer</text>
+          <text class="small" x="100" y="494" text-anchor="middle">Stadt Wolfsburg, WFS</text>
 
           <!-- Read column -->
           <rect class="box" x="310" y="110" width="170" height="50" rx="4"/>
@@ -105,6 +108,8 @@ code { font-family: var(--mono); font-size: 14px; }
           <text class="mono" x="395" y="274" text-anchor="middle">TransferPlanMapper</text>
           <rect class="box" x="310" y="340" width="170" height="50" rx="4"/>
           <text class="mono" x="395" y="369" text-anchor="middle">LineCrossingRepository</text>
+          <rect class="box" x="310" y="455" width="170" height="50" rx="4"/>
+          <text class="mono" x="395" y="484" text-anchor="middle">StadtteilService</text>
 
           <!-- Source edges -->
           <line class="edge" x1="180" y1="135" x2="308" y2="135" marker-end="url(#arrow)"/>
@@ -113,10 +118,15 @@ code { font-family: var(--mono); font-size: 14px; }
           <line class="edge" x1="180" y1="365" x2="308" y2="365" marker-end="url(#arrow)"/>
           <text class="small" x="235" y="352" text-anchor="middle">linecrossing, metadata</text>
           <text class="small" x="235" y="387" text-anchor="middle">per Jobname der Zählung</text>
+          <line class="edge" x1="180" y1="480" x2="308" y2="480" marker-end="url(#arrow)"/>
+          <text class="mono" x="235" y="467" text-anchor="middle">WFS GetFeature</text>
+          <text class="small" x="235" y="502" text-anchor="middle">Stadtteil am Standort</text>
           <circle class="badge" cx="235" cy="135" r="10"/>
           <text class="badge-text" x="235" y="139" text-anchor="middle">1</text>
           <circle class="badge" cx="235" cy="365" r="10"/>
           <text class="badge-text" x="235" y="369" text-anchor="middle">3</text>
+          <circle class="badge" cx="235" cy="480" r="10"/>
+          <text class="badge-text" x="235" y="484" text-anchor="middle">5</text>
 
           <!-- Into the plan -->
           <line class="edge" x1="395" y1="160" x2="395" y2="243" marker-end="url(#arrow)"/>
@@ -125,66 +135,75 @@ code { font-family: var(--mono); font-size: 14px; }
           <text class="small" x="404" y="323">Anzahl je 15 min</text>
           <line class="edge" x1="480" y1="270" x2="538" y2="270" marker-end="url(#arrow)"/>
           <text class="small" x="509" y="260" text-anchor="middle">Plan</text>
+          <line class="edge" x1="480" y1="480" x2="538" y2="480" marker-end="url(#arrow)"/>
+          <text class="small" x="509" y="470" text-anchor="middle">Stadtteil</text>
 
           <!-- TransferService -->
-          <rect class="box" x="540" y="90" width="190" height="335" rx="4"/>
+          <rect class="box" x="540" y="90" width="190" height="410" rx="4"/>
           <text class="mono" x="635" y="114" text-anchor="middle" style="font-weight:500">TransferService</text>
           <rect class="row" x="555" y="130" width="160" height="40" rx="3"/>
-          <text x="635" y="155" text-anchor="middle">Bestand abgleichen</text>
+          <text x="635" y="155" text-anchor="middle">Zählungen abgleichen</text>
           <rect class="row" x="555" y="190" width="160" height="40" rx="3"/>
-          <text class="mono" x="635" y="215" text-anchor="middle">ZaehlstelleMapper</text>
+          <text x="635" y="215" text-anchor="middle">Zählstelle finden</text>
           <rect class="row" x="555" y="250" width="160" height="40" rx="3"/>
-          <text class="mono" x="635" y="275" text-anchor="middle">ZaehlungMapper</text>
+          <text class="mono" x="635" y="275" text-anchor="middle">ZaehlstelleMapper</text>
           <rect class="row" x="555" y="310" width="160" height="40" rx="3"/>
-          <text class="mono" x="635" y="335" text-anchor="middle">DetectionMapper</text>
+          <text class="mono" x="635" y="335" text-anchor="middle">ZaehlungMapper</text>
           <rect class="row" x="555" y="370" width="160" height="40" rx="3"/>
-          <text x="635" y="395" text-anchor="middle">Status setzen</text>
+          <text class="mono" x="635" y="395" text-anchor="middle">DetectionMapper</text>
+          <rect class="row" x="555" y="430" width="160" height="40" rx="3"/>
+          <text x="635" y="455" text-anchor="middle">Status setzen</text>
 
           <!-- DaveService -->
-          <rect class="box" x="770" y="130" width="44" height="280" rx="4"/>
-          <text class="mono" transform="translate(796 270) rotate(-90)" text-anchor="middle">DaveService</text>
+          <rect class="box" x="770" y="130" width="44" height="340" rx="4"/>
+          <text class="mono" transform="translate(796 300) rotate(-90)" text-anchor="middle">DaveService</text>
           <line class="edge" x1="770" y1="150" x2="717" y2="150" marker-end="url(#arrow)"/>
-          <line class="edge" x1="715" y1="210" x2="768" y2="210" marker-end="url(#arrow)"/>
+          <line class="edge" x1="770" y1="210" x2="717" y2="210" marker-end="url(#arrow)"/>
           <line class="edge" x1="715" y1="270" x2="768" y2="270" marker-end="url(#arrow)"/>
           <line class="edge" x1="715" y1="330" x2="768" y2="330" marker-end="url(#arrow)"/>
           <line class="edge" x1="715" y1="390" x2="768" y2="390" marker-end="url(#arrow)"/>
+          <line class="edge" x1="715" y1="450" x2="768" y2="450" marker-end="url(#arrow)"/>
 
           <!-- DAVe -->
-          <rect class="box" x="950" y="90" width="290" height="335" rx="4"/>
+          <rect class="box" x="950" y="90" width="290" height="395" rx="4"/>
           <text class="strong" x="1095" y="115" text-anchor="middle">DAVe-Backend</text>
           <rect class="row" x="962" y="130" width="266" height="40" rx="3"/>
-          <text class="mono" x="970" y="146">POST /search</text>
-          <text class="mono" x="970" y="163">GET  /zaehlstelle/editZaehlstelle</text>
+          <text class="mono" x="970" y="155">GET /zaehlung/byProjektNummerPrefix</text>
           <rect class="row" x="962" y="190" width="266" height="40" rx="3"/>
-          <text class="mono" x="970" y="215">POST /zaehlstelle/save</text>
+          <text class="mono" x="970" y="215">POST /search</text>
           <rect class="row" x="962" y="250" width="266" height="40" rx="3"/>
-          <text class="mono" x="970" y="275">POST /zaehlung/save</text>
+          <text class="mono" x="970" y="275">POST /zaehlstelle/save</text>
           <rect class="row" x="962" y="310" width="266" height="40" rx="3"/>
-          <text class="mono" x="970" y="335">POST /detector/save-latest-detections</text>
+          <text class="mono" x="970" y="335">POST /zaehlung/save</text>
           <rect class="row" x="962" y="370" width="266" height="40" rx="3"/>
-          <text class="mono" x="970" y="395">POST /zaehlung/updateStatus</text>
+          <text class="mono" x="970" y="395">POST /detector/save-latest-detections</text>
+          <rect class="row" x="962" y="430" width="266" height="40" rx="3"/>
+          <text class="mono" x="970" y="455">POST /zaehlung/updateStatus</text>
 
           <!-- Edges to DAVe -->
           <line class="edge" x1="960" y1="150" x2="816" y2="150" marker-end="url(#arrow)"/>
-          <line class="edge" x1="814" y1="210" x2="960" y2="210" marker-end="url(#arrow)"/>
+          <line class="edge" x1="960" y1="210" x2="816" y2="210" marker-end="url(#arrow)"/>
           <line class="edge" x1="814" y1="270" x2="960" y2="270" marker-end="url(#arrow)"/>
           <line class="edge" x1="814" y1="330" x2="960" y2="330" marker-end="url(#arrow)"/>
           <line class="edge" x1="814" y1="390" x2="960" y2="390" marker-end="url(#arrow)"/>
-          <text class="small" x="892" y="136" text-anchor="middle">Bestand lesen</text>
-          <text class="small" x="892" y="196" text-anchor="middle">nur wenn Name fehlt</text>
-          <text class="small" x="892" y="256" text-anchor="middle">Status CREATED</text>
-          <text class="small" x="892" y="316" text-anchor="middle">je Viertelstunde</text>
-          <text class="small" x="892" y="376" text-anchor="middle">ACCOMPLISHED</text>
+          <line class="edge" x1="814" y1="450" x2="960" y2="450" marker-end="url(#arrow)"/>
+          <text class="small" x="892" y="136" text-anchor="middle">alle cronist-*</text>
+          <text class="small" x="892" y="196" text-anchor="middle">nur für neue Zählung</text>
+          <text class="small" x="892" y="256" text-anchor="middle">nur wenn keine ≤ 5 m</text>
+          <text class="small" x="892" y="316" text-anchor="middle">Status CREATED</text>
+          <text class="small" x="892" y="376" text-anchor="middle">je Viertelstunde</text>
+          <text class="small" x="892" y="436" text-anchor="middle">ACCOMPLISHED/ACTIVE</text>
           <g>
             <circle class="badge" cx="892" cy="150" r="10"/><text class="badge-text" x="892" y="154" text-anchor="middle">2</text>
             <circle class="badge" cx="892" cy="210" r="10"/><text class="badge-text" x="892" y="214" text-anchor="middle">4</text>
-            <circle class="badge" cx="892" cy="270" r="10"/><text class="badge-text" x="892" y="274" text-anchor="middle">5</text>
-            <circle class="badge" cx="892" cy="330" r="10"/><text class="badge-text" x="892" y="334" text-anchor="middle">6</text>
-            <circle class="badge" cx="892" cy="390" r="10"/><text class="badge-text" x="892" y="394" text-anchor="middle">7</text>
+            <circle class="badge" cx="892" cy="270" r="10"/><text class="badge-text" x="892" y="274" text-anchor="middle">6</text>
+            <circle class="badge" cx="892" cy="330" r="10"/><text class="badge-text" x="892" y="334" text-anchor="middle">7</text>
+            <circle class="badge" cx="892" cy="390" r="10"/><text class="badge-text" x="892" y="394" text-anchor="middle">8</text>
+            <circle class="badge" cx="892" cy="450" r="10"/><text class="badge-text" x="892" y="454" text-anchor="middle">9</text>
           </g>
         </svg>
       </div>
-      <figcaption>Die Nummern zeigen die Reihenfolge. Die Viertelstunden gehen einzeln und mit der ältesten zuerst an DAVe, weil DAVe nur so fehlende Fahrbeziehungen mit Nullen auffüllt und schon vorhandene Intervalle überspringt.</figcaption>
+      <figcaption>Die Nummern zeigen die Reihenfolge. Die Zählungen findet der Adapter mit einem Aufruf je Lauf über ihre Projektnummer, egal an welcher Zählstelle sie hängen. Zählstellen und GeoServer fragt er nur ab, wenn eine Zählung neu angelegt wird (4 bis 6). Die Viertelstunden gehen einzeln und mit der ältesten zuerst an DAVe, weil DAVe nur so fehlende Fahrbeziehungen mit Nullen auffüllt und schon vorhandene Intervalle überspringt.</figcaption>
     </figure>
   </section>
 
@@ -202,7 +221,7 @@ code { font-family: var(--mono); font-size: 14px; }
             </marker>
           </defs>
 
-          <text class="small" x="20" y="16">Status der Zählung in DAVe (gefunden über projektNummer cronist-&lt;id&gt;)</text>
+          <text class="small" x="20" y="16">Status der Zählung in DAVe (gefunden über projektNummer cronist-&lt;id&gt;, unabhängig von der Zählstelle)</text>
 
           <!-- Entry chips -->
           <rect class="chip" x="20" y="30" width="200" height="30" rx="15"/>
@@ -227,7 +246,7 @@ code { font-family: var(--mono); font-size: 14px; }
 
           <rect class="box" x="290" y="110" width="200" height="70" rx="4"/>
           <text class="strong" x="390" y="140" text-anchor="middle">Anlegen</text>
-          <text class="small" x="390" y="160" text-anchor="middle">Zählstelle bei Bedarf, Zählung</text>
+          <text class="small" x="390" y="160" text-anchor="middle">Zählstelle am Standort, Zählung</text>
 
           <rect class="box" x="550" y="110" width="200" height="70" rx="4"/>
           <text class="strong" x="650" y="140" text-anchor="middle">Daten senden</text>
@@ -261,8 +280,9 @@ code { font-family: var(--mono); font-size: 14px; }
       <table>
         <thead><tr><th>Quelle</th><th>In DAVe</th><th>Regel</th></tr></thead>
         <tbody>
-          <tr><td>Observation Area</td><td>Zählstelle</td><td>Der Name steht in <code>nummer</code>, weil DAVe kein Namensfeld hat. Eine gleichnamige Zählstelle wird wiederverwendet.</td></tr>
-          <tr><td>Counting</td><td>Zählung</td><td><code>projektNummer = cronist-&lt;id&gt;</code> ordnet sie dem Counting zu.</td></tr>
+          <tr><td>Observation Area</td><td>Zählstelle</td><td>Erkannt am Standort: Eine Zählstelle im Umkreis von 5 m wird wiederverwendet und nie geändert, sonst wird eine angelegt. Die <code>nummer</code> vergibt DAVe. Der Name steht im <code>kommentar</code> als <code>&lt;Name&gt; - Cronist</code> und als Suchwort.</td></tr>
+          <tr><td>Standort der Area</td><td>Stadtbezirk</td><td>Der GeoServer der Stadt Wolfsburg liefert den Stadtteil, <code>adapter.dave.stadtbezirk-mapping</code> ordnet ihm die Nummer in DAVe zu. Ohne Treffer gilt <code>adapter.dave.stadtbezirk-nummer</code>, standardmäßig 130 (Stadtmitte).</td></tr>
+          <tr><td>Counting</td><td>Zählung</td><td><code>projektNummer = cronist-&lt;id&gt;</code> ordnet sie dem Counting zu, auch wenn die Area verschoben wurde.</td></tr>
           <tr><td>Zähllinie mit Richtung</td><td>Knotenarm</td><td>N=1, E=2, S=3, W=4, NE=5, SE=6, SW=7, NW=8. Es braucht mindestens zwei Richtungen.</td></tr>
           <tr><td>Linecrossings eines Objekts</td><td>Detection</td><td>Gezählt wird, wer über eine Linie herein- und über eine andere hinausfährt, in der Viertelstunde des Hinausfahrens.</td></tr>
         </tbody>

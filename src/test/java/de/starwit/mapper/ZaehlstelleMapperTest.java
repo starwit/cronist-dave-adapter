@@ -30,6 +30,11 @@ class ZaehlstelleMapperTest {
     }
 
     @Test
+    void zaehlstelleIsVisibleInDatenportal() {
+        assertThat(mapper.convertToDto(TestData.AREA, Optional.empty()).sichtbarDatenportal()).isTrue();
+    }
+
+    @Test
     void stadtbezirkIsMappedFromStadtteil() {
         assertThat(mapper.convertToDto(TestData.AREA, Optional.of("Stadtmitte")).stadtbezirkNummer()).isEqualTo(5);
     }

@@ -35,7 +35,7 @@ public class ZaehlstelleMapper {
     public CreateZaehlstelleDto convertToDto(ObservationAreaDto area, Optional<String> stadtteil) {
         String kommentar = area.name() + " - Cronist";
         return new CreateZaehlstelleDto(toStadtbezirkNummer(area, stadtteil), area.latitude(), area.longitude(),
-                kommentar, List.of(area.name()), false);
+                kommentar, List.of(area.name()), true);
     }
 
     private int toStadtbezirkNummer(ObservationAreaDto area, Optional<String> stadtteil) {

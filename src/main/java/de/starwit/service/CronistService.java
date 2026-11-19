@@ -6,12 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
 import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import de.starwit.config.AdapterProperties;
 import de.starwit.config.BearerTokenConfigurer;
 import de.starwit.dto.cronist.CountingDto;
+import de.starwit.dto.cronist.ImageDto;
 
 /** Calls the Cronist API. */
 @Service
@@ -40,5 +42,12 @@ public class CronistService {
         return countings.stream()
                 .filter(counting -> CountingDto.STATE_COMPLETED.equals(counting.state()))
                 .toList();
+    }
+
+    /** @param imageId of an observation area */
+    public ImageDto getImage(Long imageId) {
+        ResponseEntity<byte[]> response = restClient.get().uri("/api/observationarea/image/{id}", imageId).retrieve()
+                .toEntity(byte[].class);
+        return new ImageDto(response.getBody(), response.getHeaders().getContentType());
     }
 }

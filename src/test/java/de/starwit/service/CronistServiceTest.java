@@ -13,6 +13,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 import de.starwit.dto.cronist.CountingDto;
+import de.starwit.dto.cronist.ImageDto;
 
 class CronistServiceTest {
 
@@ -54,5 +55,18 @@ class CronistServiceTest {
         assertThat(counting.observatoryJobs().getFirst().name()).isEqualTo("cronist-counting-1-north");
         assertThat(counting.polygon().get(0).isCountingLine()).isTrue();
         assertThat(counting.polygon().get(1).isCountingLine()).isFalse();
+    }
+
+    @Test
+    void readsImageWithItsContentType() {
+        RestClient.Builder builder = RestClient.builder().baseUrl("http://cronist/cronist");
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo("http://cronist/cronist/api/observationarea/image/5"))
+                .andRespond(withSuccess(new byte[] { 1, 2 }, MediaType.IMAGE_PNG));
+
+        ImageDto image = new CronistService(builder.build()).getImage(5L);
+
+        assertThat(image.data()).containsExactly(1, 2);
+        assertThat(image.contentType()).isEqualTo(MediaType.IMAGE_PNG);
     }
 }

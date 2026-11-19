@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
+import de.starwit.dto.cronist.ImageDto;
 import de.starwit.dto.dave.CreateZaehlstelleDto;
 import de.starwit.dto.dave.CreateZaehlungDto;
 import de.starwit.dto.dave.DetectionDto;
@@ -80,6 +81,21 @@ class DaveServiceTest {
 
         assertThat(service.createZaehlstelle(new CreateZaehlstelleDto(3, 48.1, 11.5, "c",
                 List.of("Marienplatz"), false))).isEqualTo("a");
+    }
+
+    @Test
+    void sendsZaehlstelleImageAsFile() {
+        server.expect(requestTo("http://dave/zaehlstelleimage/a"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(content().string(org.hamcrest.Matchers.allOf(
+                        org.hamcrest.Matchers.containsString("name=\"image\"; filename=\"zaehlstelle\""),
+                        org.hamcrest.Matchers.containsString("Content-Type: image/png"))))
+                .andRespond(withSuccess());
+
+        service.saveZaehlstelleImage("a", new ImageDto(new byte[] { 1, 2 }, MediaType.IMAGE_PNG));
+
+        server.verify();
     }
 
     @Test
