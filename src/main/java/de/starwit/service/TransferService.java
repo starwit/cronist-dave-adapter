@@ -71,7 +71,11 @@ public class TransferService {
         try {
             List<CountingDto> countings = cronist.findCompletedCountings();
             if (!countings.isEmpty()) {
+                LOG.debug("Found {} countings. Transfering to DAVe ... ", countings.size());
                 transfer(countings);
+                LOG.debug("Transfer to DAVe done");
+            } else {
+                LOG.debug("no countings ready for transfer");
             }
         } catch (RuntimeException e) {
             // e.g. Cronist or DAVe not reachable, try again next run
