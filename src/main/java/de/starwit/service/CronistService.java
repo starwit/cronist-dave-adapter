@@ -50,4 +50,13 @@ public class CronistService {
                 .toEntity(byte[].class);
         return new ImageDto(response.getBody(), response.getHeaders().getContentType());
     }
+
+    /**
+     * Calls a URL with the same client as all other requests, so the credentials are checked too.
+     *
+     * @param testUrl absolute, or relative to the base URL
+     */
+    public void checkConnection(String testUrl) {
+        restClient.get().uri(testUrl).retrieve().toBodilessEntity();
+    }
 }

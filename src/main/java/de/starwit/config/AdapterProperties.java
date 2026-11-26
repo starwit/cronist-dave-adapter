@@ -17,19 +17,25 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 public record AdapterProperties(ZoneId zone, boolean correctBicycle, Map<String, Integer> intersectionMapping,
         Cronist cronist, Dave dave, Geoserver geoserver) {
 
-    /** @param clientRegistrationId OAuth2 client to authenticate with, requests are sent without a token if null */
-    public record Cronist(String url, String clientRegistrationId,
+    /**
+     * @param testUrl              called periodically to check reachability and credentials, the check is disabled if
+     *                             empty
+     * @param clientRegistrationId OAuth2 client to authenticate with, requests are sent without a token if null
+     */
+    public record Cronist(String url, String testUrl, String clientRegistrationId,
             @DefaultValue("2s") Duration connectTimeout, @DefaultValue("30s") Duration readTimeout) {
     }
 
     /**
+     * @param testUrl              called periodically to check reachability and credentials, the check is disabled if
+     *                             empty
      * @param clientRegistrationId OAuth2 client to authenticate with, requests are sent without a token if null
      * @param stadtbezirkNummer    Stadtbezirk of the created Zaehlstellen whose Stadtteil is unknown or not mapped
      * @param stadtbezirkMapping   name of the Stadtteil found by the GeoServer to number of the Stadtbezirk in DAVe
      * @param kategorien           vehicle classes the Zaehlungen are created with
      * @param finalStatus          status of a Zaehlung once all its data is transferred
      */
-    public record Dave(String url, String clientRegistrationId,
+    public record Dave(String url, String testUrl, String clientRegistrationId,
             @DefaultValue("2s") Duration connectTimeout, @DefaultValue("30s") Duration readTimeout,
             int stadtbezirkNummer, Map<String, Integer> stadtbezirkMapping, List<String> kategorien,
             FinalStatus finalStatus) {

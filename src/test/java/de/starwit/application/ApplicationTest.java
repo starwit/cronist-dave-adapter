@@ -19,6 +19,9 @@ import java.net.http.HttpResponse;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         "adapter.cronist.url=http://localhost:1",
         "adapter.dave.url=http://localhost:1",
+        // the connection checks would fail and turn the health check DOWN
+        "adapter.cronist.test-url=",
+        "adapter.dave.test-url=",
         "adapter.cronist.client-registration-id=cronist",
         "adapter.dave.client-registration-id=dave",
         "spring.security.oauth2.client.registration.cronist.provider=idp",
