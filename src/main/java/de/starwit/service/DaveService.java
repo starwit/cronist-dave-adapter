@@ -118,4 +118,13 @@ public class DaveService {
         restClient.post().uri("/zaehlung/updateStatus").body(new UpdateStatusDto(zaehlungId, status)).retrieve()
                 .toBodilessEntity();
     }
+
+    /**
+     * Calls a URL with the same client as all other requests, so the credentials are checked too.
+     *
+     * @param testUrl absolute, or relative to the base URL
+     */
+    public void checkConnection(String testUrl) {
+        restClient.get().uri(testUrl).retrieve().toBodilessEntity();
+    }
 }

@@ -150,7 +150,11 @@ mvn clean install
 java -jar target/cronist-dave-adapter-0.0.1-SNAPSHOT.jar
 ```
 
-The health check is available at <http://localhost:8089/monitoring/health>.
+The health check is available at <http://localhost:8089/monitoring/health>. Every
+`adapter.credential-check-interval` (default 5 minutes) the adapter calls `adapter.cronist.test-url` and
+`adapter.dave.test-url` (`CRONIST_TEST_URL`, `DAVE_TEST_URL`) with its credentials. The results are reported as the
+components `cronist` and `dave`: if a service is not reachable or the credentials are rejected, the health check is
+`DOWN` and a warning with the reason is logged. An empty test URL disables the check of that service.
 
 To build the image:
 
